@@ -1,0 +1,28 @@
+#de donde parte la imagen en este caso del servidor nginx , la imagen se tomo del repositorio dockerhub , siendo alpine una distribucion muy liviana de linux
+FROM nginx:alpine 
+#Instalaicion jdk 8 , se dan las sentencias y que elimine con rm lo que este en la ruta x
+RUN apk -U add openjdk8 \
+	&& rm -rf /var/cache/apk/*;
+RUN apk add ttf-dejavu
+
+#install java microservicios, se declaran variables para ser usadas en la consola a la hora de crear la imagen
+ENV JAVA_OPTS=""
+#contendra el nombre del proyecto
+ARG JAR_FILE
+#se agregara la extension al nombre dado en la v
+ADD ${JAR_FILE} app.jar
+
+#Install app on nginx serve
+	#use a volume is mor efficent and speed that filesystem
+VOLUME /tmp
+RUN rm -rf /usr/share/nginx/html/*
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY dist/billingApp /usr/share/nginx/html
+COPY appshell.sh appshell.sh
+
+#EXPOSE port 8080 for java swagger app and 80 for nginx app
+EXPOSE 80 8080
+#ejecuta una shell despues de ejecutar lo anterior a esta linea es decir el contenedor , entonecs esa shell muestra el estado de los servicios cada  60seg
+ENTRYPOINT ["sh", "/appshell.sh"]
+
+
